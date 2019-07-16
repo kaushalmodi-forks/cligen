@@ -569,7 +569,6 @@ macro dispatchGen*(pro: typed{nkSym}, cmdName: string="", doc: string="",
       {.push hint[XDeclaredButNotUsed]: off.}
       `initVars`
       `aliases`
-      var `keyCountId` = initCountTable[string]()
       proc parser(args=`cmdLineId`) =
         var `posNoId` = 0
         var `pId` = initOptParser(args, `apId`.shortNoVal, `apId`.longNoVal,
@@ -869,7 +868,7 @@ macro dispatchMulti*(procBrackets: varargs[untyped]): untyped =
     prefix = procBrackets[0][0].strVal
   let subCmdsId = ident(prefix & "SubCmds")
   let subMchsId = ident(prefix & "SubMchs")
-  let SubsDispId = ident(prefix & "Subs")
+  let subsDispId = ident(prefix & "Subs")
   result = newStmtList()
   result.add(quote do: {.push warning[GCUnsafe]: off.})
   result.add(newCall("dispatchMultiGen", copyNimTree(procBrackets)))
@@ -890,11 +889,11 @@ macro dispatchMulti*(procBrackets: varargs[untyped]): untyped =
      elif ps.len > 0 and ps0.len == 0:
        ambigSubcommand(`subMchsId`, ps[0])
      elif ps.len == 2 and ps0 == "help":
-       if ps1 in `subMchsId`: cligenQuit(`SubsDispId`(@[ ps1, "--help" ]))
+       if ps1 in `subMchsId`: cligenQuit(`subsDispId`(@[ ps1, "--help" ]))
        elif ps1.len == 0: ambigSubcommand(`subMchsId`, ps[1])
        else: unknownSubcommand(ps[1], `subCmdsId`)
      else:
-       cligenQuit(`SubsDispId`())
+       cligenQuit(`subsDispId`())
      {.pop.}  #ProveField
      {.pop.}  #GlobalVar
     {.pop.}) #GCUnsafe
@@ -919,7 +918,7 @@ macro initGen*(default: typed, T: untyped, positional="",
                              ident(($suppress[1][0])[10..^1]) else: nil
   let posId = ident(positional.strVal)
   var params = @[ quote do: `T` ] #Return type
-  var assigns = newStmtList()     #List of assignments 
+  var assigns = newStmtList()     #List of assignments
   for kid in ti.children:         #iterate over fields
     if kid.kind != nnkIdentDefs: warning "case objects unsupported"
     let id = ident(kid[0].strVal)
